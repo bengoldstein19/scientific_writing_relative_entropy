@@ -155,8 +155,6 @@ def perform_topic_analysis():
 		plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(-0.25, 1),
 				   fancybox=True, shadow=False, ncol=6)
 
-		# plt.figure(3)
-
 		fig, ax = plt.subplots(nrows=1, ncols=2)
 
 		ax[PRIMARY_PLOT_COL].plot(DECADES, total_primary_topics_unique, 'r-')
@@ -263,17 +261,29 @@ def perform_text_analysis():
 			pre_decade = DECADES[i+1]
 			pre_wordcount = 0
 			pre_key = (topic, pre_decade)
-			pre_lemmamap = {} # maps of lemma to its # of occurrences
-			post_lemmamap = {}
+			pre_lemmamap = {} # maps of lemma to its # of occurrences in pre period
+			post_lemmamap = {} # maps of lemma to its # of occurrences in post period
+
+			# for each text in the pre period with the given primary topic
 			for pre_textid in text_ids.get(pre_key, []):
+				
+				#generate text filepath from constants
 				text_filepath = os.path.join(ROOT_DIR, TEXT_DIR, TEXT_BASE_FILENAME.format(pre_textid))
+				
+				#open text xml file
 				with open(text_filepath, "r") as textfile:
+					
+					#parse with beautiful soup, find the text tag and child lemma tags
 					text_soup = BeautifulSoup(textfile, 'html.parser')
 					text = text_soup.find('text', {'n': pre_textid})
 					lemma_tags = text.find_all(lambda t: t.name == 'w' and t.has_attr('lemma'))
 					for lemma_tag in lemma_tags:
+
+						#for each valid lemma add to maps if not already present, increment pre count
 						lemma = lemma_tag['lemma']
-						if lemma and (not lemma in COMMON_WORDS) and len(lemma) >= MIN_LEMMA_LEN:
+
+						#validity test: it needs to exist, not be a common word, and be all letters
+						if lemma and (not lemma in COMMON_WORDS) and len(lemma) >= MIN_LEMMA_LEN and lemma.isalpha():
 							pre_wordcount += 1
 							if not pre_lemmamap.get(lemma):
 								pre_lemmamap[lemma] = 1
@@ -296,48 +306,50 @@ def perform_text_analysis():
 						if lemma and (not lemma in COMMON_WORDS) and len(lemma) >= MIN_LEMMA_LEN and lemma.isalpha():
 							post_wordcount += 1
 							if not pre_lemmamap.get(lemma):
+
+								#initial quantities reversed from the pre case
 								pre_lemmamap[lemma] = 0
 								post_lemmamap[lemma] = 1
 							else:
+
+								#increment post counter instead of pre counter this time
 								post_lemmamap[lemma] += 1
 
 			kld = float("nan")
 
+			#if valid lemmas found in each period (will not be the case if no articles of a given topic in a period)
 			if pre_wordcount > 0 and post_wordcount > 0:
+
+				#store all the lemmas in a list
 				keys = list(pre_lemmamap.keys())
+
+				#if a lemma is not present in either the pre or post period drop it from the map
 				for k in keys:
 					if pre_lemmamap[k] == 0 or post_lemmamap[k] == 0:
 						del pre_lemmamap[k]
 						del post_lemmamap[k]
-						# pre_wordcount -= 1
-						# post_wordcount -= 1
 
+				#Create lists of frequencies in pre/post periods for each lemma that increases by the filter threshold parameter
+				#Isolates lemmas involved in driving linguistic change
 				filter_threshold = INITIAL_FREQUENCY_DIFF_FILTER
-				pre_lemmamap_filtered = pre_lemmamap.copy()
-				post_lemmamap_filtered = post_lemmamap.copy()
 				pre_lemma_freqs = []
 				post_lemma_freqs = []
 				for k in pre_lemmamap:
-					if (post_lemmamap[k] / post_wordcount * 1000000) - (pre_lemmamap[k] / pre_wordcount * 1000000) < filter_threshold:
-						del pre_lemmamap_filtered[k]
-						del post_lemmamap_filtered[k]
-					else:
+					if (post_lemmamap[k] / post_wordcount * 1000000) - (pre_lemmamap[k] / pre_wordcount * 1000000) > filter_threshold:
 						pre_lemma_freqs.append(pre_lemmamap[k] / pre_wordcount * 1000000)
 						post_lemma_freqs.append(post_lemmamap[k] / post_wordcount * 1000000)
 
+				#Run a 2 sample Welch's t test on the frequency arrays
 				p_value = stats.ttest_ind(pre_lemma_freqs, post_lemma_freqs, equal_var=False).pvalue
 
-				while ((p_value > 0.01 or p_value != p_value) and filter_threshold > 1):
+				#Repeatedly decrease filter and repeat above process until p value reaches desired value (GOAL_P_VAL) or filter_threshold < 1
+				#Store minimum p value
+				while ((p_value > GOAL_P_VAL or p_value != p_value) and filter_threshold > 1):
 					filter_threshold *= 0.75
-					pre_lemmamap_filtered = pre_lemmamap.copy()
-					post_lemmamap_filtered = post_lemmamap.copy()
 					pre_lemma_freqs_attempt = []
 					post_lemma_freqs_attempt = []
 					for k in pre_lemmamap:
-						if (post_lemmamap[k] / post_wordcount * 1000000) - (pre_lemmamap[k]/ pre_wordcount * 1000000 ) < filter_threshold:
-							del pre_lemmamap_filtered[k]
-							del post_lemmamap_filtered[k]
-						else:
+						if (post_lemmamap[k] / post_wordcount * 1000000) - (pre_lemmamap[k]/ pre_wordcount * 1000000 ) > filter_threshold:
 							pre_lemma_freqs_attempt.append(pre_lemmamap[k] * 1000000 / pre_wordcount)
 							post_lemma_freqs_attempt.append(post_lemmamap[k] * 1000000 / post_wordcount)
 
@@ -347,34 +359,42 @@ def perform_text_analysis():
 						pre_lemma_freqs = pre_lemma_freqs_attempt
 						post_lemma_freqs = post_lemma_freqs_attempt
 
-				kld = float("nan")
-				if len(pre_lemma_freqs) > 0 and p_value < 0.05:
+				#If optimal p value from iteration reached satisfactory value (MIN_ACCEPTED_P_VAL) and both arrays are populated
+				#then calculate KLD, otherwise leave the datapoint as nan
+				if len(pre_lemma_freqs) > 0 and p_value < MIN_ACCEPTED_P_VAL:
+					#Statistical calculation of the Kullback Leibler divergence between the two sets
 					presum = sum(pre_lemma_freqs)
 					postsum = sum(post_lemma_freqs)
 					freq4 = [x/presum for x in pre_lemma_freqs]
 					freq4p = [x/postsum for x in post_lemma_freqs]
 					kld = sum([x * math.log(x, 2) for x in freq4p]) - sum(x * math.log(freq4[i], 2) for i, x in enumerate(freq4p))
+			#store the kld (whether or not it's nan under the topic and decade where it belongs)
 			klds[topic][i] = kld
 
+	#write the data to the output file
 	relative_entropy_output_filepath = os.path.join(ROOT_DIR, RELATIVE_ENTROPY_OUTPUT_FILENAME)
 	with open(relative_entropy_output_filepath, "w") as entropy_outfile:
 		entropy_writer = csv.writer(entropy_outfile)
 		entropy_writer.writerow(["Decades"] + DECADES[2:-1])
 		for topic in klds:
 			entropy_writer.writerow([topic] + [kld if kld == kld else "" for kld in klds[topic]])
+
+	#plot the data from the newly created output file
 	plot_entropies_from_file()
 
 
 def plot_entropies_from_file():
+
+	#check that the output file exists
 	output_filepath = os.path.join(ROOT_DIR, RELATIVE_ENTROPY_OUTPUT_FILENAME)
 	if not os.path.exists(output_filepath):
 		print(f"ERROR: NO file in {ROOT_DIR} named {RELATIVE_ENTROPY_OUTPUT_FILENAME}, make sure ROOT_DIR and RELATIVE_ENTROPY_OUTPUT_FILENAME are properly set, and make sure you've already run function (1) to produce the output")
 		return
 	
+	#plot and save each row of the output path as well as linear regression on the data
 	with open(output_filepath, "r") as entropy_file:
 		entropy_reader = csv.reader(entropy_file)
 		first = True
-		corr_lst = []
 		for row in entropy_reader:
 			if first:
 				first = False
@@ -391,8 +411,6 @@ def plot_entropies_from_file():
 			plt.plot([DECADES[x+2] for x in range(NUM_DECADES - 3) if data[x] == data[x]], [x*linreg_result.slope + linreg_result.intercept for x in [DECADES[x+2] for x in range(NUM_DECADES - 3) if data[x] == data[x]]], label=f"Linreg: y = {linreg_result.slope:.5f}x + {linreg_result.intercept:.3f} (r = {linreg_result.rvalue:.3f})", linestyle='-')
 			plt.legend()
 			plt.savefig(os.path.join(ROOT_DIR, PLOT_BASE_FILENAME.format(topic)), bbox_inches='tight')
-			corr_lst.append((topic, linreg_result.rvalue))
-		corr_lst.sort(key=lambda t: abs(t[1]))
 		plt.show()
 
 
