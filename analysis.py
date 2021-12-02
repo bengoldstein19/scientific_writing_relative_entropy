@@ -422,7 +422,7 @@ if __name__ == "__main__":
 	repeat = True
 	while repeat:
 		user_input = input(
-			"Choose function: topic analysis (0), text analysis (1), plot entropies from data (2), quit (3)\n")
+			"Welcome to the Royal Society relative entropy analysis portal!\nChoose a function from the list then press Enter\n\tTopic Analysis From Metadata (0)\n\tRelative Entropy Analysis on Corpus (also plots and saves data)(1)\n\tPlot Data From Existing Files(2)\n\tQuit App (3)\n\nType 0, 1, 2, or 3 here: ")
 		if user_input == "0":
 			perform_topic_analysis()
 		if user_input == "1":
@@ -431,4 +431,4 @@ if __name__ == "__main__":
 			plot_entropies_from_file()
 		if user_input == "3":
 			repeat = False
-	print("SUCCESS")
+	print("Thanks for using the portal!")
