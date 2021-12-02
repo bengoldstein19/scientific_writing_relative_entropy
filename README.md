@@ -4,7 +4,7 @@ Relative entropy analysis on the royal society corpus using python/scipy/matplot
 
 Dependencies:
 
-- Python3
+- Python3.x
 - bs4
 - matplotlib
 - scipy
@@ -16,6 +16,9 @@ Required Files:
 
 Setup:
 
+- Clone repository by running git clone https://github.com/bengoldstein19/scientific_writing_relative_entropy.git
+- [Install Python3.x](https://www.python.org/downloads)
+- Install dependencies by running pip install -r requirements.txt
 - Make sure ROOT_DIR is set to the location of the metadata file
 - Make sure all tei xml files are within a single folder that is a direct child of the root directory, and TEXT_DIR is set to the name of that directory
 - Make sure the METADATA_FILENAME and TEXT_BASE_FILENAME parameters match the name of the downloaded files - If column titles change, set the column names of the ID_COL, ..., DECADE_COL
