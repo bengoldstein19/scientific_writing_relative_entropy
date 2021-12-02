@@ -1,4 +1,4 @@
-# scientific_writing_relative_entropy
+# Scientific Writing: Relative Entropy Analysis
 
 Relative entropy analysis on the royal society corpus using python/scipy/matplotlib
 
