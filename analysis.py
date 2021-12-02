@@ -8,7 +8,7 @@ import math
 
 # MARK: REQUIRED FILE PATHS
 ROOT_DIR = "/Users/benjamingoldstein/Downloads"
-METADATA_FILENAME = "Royal_Society_Corpus_open_v6.0_meta.tsv"  # ~8.5 MB
+METADATA_FILENAME = "Royal_Society_Corpus_open_v6.0_meta.tsv" 
 TEXT_DIR = "Royal_Society_Corpus_open_v6.0_texts_tei" #relative to root_dir
 TEXT_BASE_FILENAME = "Royal_Society_Corpus_open_v6.0_text_{}.tei.xml" #text ID inserted into brackets
 
@@ -32,8 +32,11 @@ NUM_DECADES = int((END_DECADE - START_DECADE)/10) + 1
 
 #PARAMETER CONSTANTS
 COMMON_WORDS = ["a", "able", "about", "across", "after", "all", "almost", "also", "am", "among", "an", "and" , "any", "are", "as", "at", "be", "because", "been", "but", "by", "can", "cannot", "could", "dear", "did", "do", "does", "either", "else", "ever", "every", "for", "from", "get", "got", "had", "has", "have", "he", "her", "hers", "him", "his", "how", "however", "i", "if", "in" , "into", "is" , "it", "its", "just", "least", "let", "like", "likely", "may", "me", "might", "most", "must", "my", "neither", "no", "nor", "not", "of", "off", "often", "on", "only", "or" , "other", "our", "own", "rather", "said", "say", "says", "she", "should", "since", "so", "some", "than", "that", "the", "their", "them", "then", "there", "these", "they", "this", "tis", "to", "too", "twas", "us", "wants", "was", "we", "were", "what", "when", "where", "which", "while", "who", "whom", "why", "will", "with", "would", "yet", "you", "your"]
+# https://www.textfixer.com/tutorials/common-english-words.txt (common words url)
 MIN_LEMMA_LEN = 3
 INITIAL_FREQUENCY_DIFF_FILTER = 2000 # (occurrences/million)
+GOAL_P_VAL = 0.01
+MIN_ACCEPTED_P_VAL = 0.05
 
 # MARK: PLOTTING CONSTANTS
 PLOT_COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
