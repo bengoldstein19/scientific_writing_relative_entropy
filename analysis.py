@@ -229,7 +229,6 @@ def perform_topic_analysis():
 def perform_text_analysis():
 	#open metadata file
 	metadata_filepath = os.path.join(ROOT_DIR, METADATA_FILENAME)
-	print("Opening metadata")
 	with open(metadata_filepath, "r") as metadata_fp:
 		
 		#create csv reader object for metadata file
@@ -259,10 +258,8 @@ def perform_text_analysis():
 	
 	klds = {}
 	for topic in primary_topics:
-		print(f"Analyzing {topic}")
 		klds[topic] = [float("nan")] * (NUM_DECADES - 3)
 		for i, decade in enumerate(DECADES[2:-1]):
-			#print(f"PRE: {DECADES[i+1]} | POST: {decade}")
 			pre_decade = DECADES[i+1]
 			pre_wordcount = 0
 			pre_key = (topic, pre_decade)
@@ -271,7 +268,6 @@ def perform_text_analysis():
 			for pre_textid in text_ids.get(pre_key, []):
 				text_filepath = os.path.join(ROOT_DIR, TEXT_DIR, TEXT_BASE_FILENAME.format(pre_textid))
 				with open(text_filepath, "r") as textfile:
-					#print(f"Generating soup for textid {pre_textid}")
 					text_soup = BeautifulSoup(textfile, 'html.parser')
 					text = text_soup.find('text', {'n': pre_textid})
 					lemma_tags = text.find_all(lambda t: t.name == 'w' and t.has_attr('lemma'))
@@ -292,7 +288,6 @@ def perform_text_analysis():
 			for post_textid in text_ids.get(post_key, []):
 				text_filepath = os.path.join(ROOT_DIR, TEXT_DIR, TEXT_BASE_FILENAME.format(post_textid))
 				with open(text_filepath, "r") as textfile:
-					#print(f"Generating soup for textid {post_textid}")
 					text_soup = BeautifulSoup(textfile, 'html.parser')
 					text = text_soup.find('text', {'n': post_textid})
 					lemma_tags = text.find_all(lambda t: t.name == 'w' and t.has_attr('lemma'))
@@ -305,8 +300,6 @@ def perform_text_analysis():
 								post_lemmamap[lemma] = 1
 							else:
 								post_lemmamap[lemma] += 1
-
-			#print(f"PRE WC: {pre_wordcount} | POST WC: {post_wordcount}")
 
 			kld = float("nan")
 
@@ -331,17 +324,11 @@ def perform_text_analysis():
 					else:
 						pre_lemma_freqs.append(pre_lemmamap[k] / pre_wordcount * 1000000)
 						post_lemma_freqs.append(post_lemmamap[k] / post_wordcount * 1000000)
-						#print(f"PRE FREQUENCY OF {k} is {pre_lemmamap[k] / pre_wordcount * 1000000}")
-						#print(f"POST FREQUENCY OF {k} is {post_lemmamap[k] / post_wordcount * 1000000}")
 
 				p_value = stats.ttest_ind(pre_lemma_freqs, post_lemma_freqs, equal_var=False).pvalue
 
-				#print(f"INITIAL P VALUE: {p_value}")
-				best_threshold = filter_threshold
-
 				while ((p_value > 0.01 or p_value != p_value) and filter_threshold > 1):
 					filter_threshold *= 0.75
-					#print(f"THRESHOLD: {filter_threshold}")
 					pre_lemmamap_filtered = pre_lemmamap.copy()
 					post_lemmamap_filtered = post_lemmamap.copy()
 					pre_lemma_freqs_attempt = []
@@ -351,8 +338,6 @@ def perform_text_analysis():
 							del pre_lemmamap_filtered[k]
 							del post_lemmamap_filtered[k]
 						else:
-							#print(f"PRE FREQUENCY OF {k} is {pre_lemmamap[k] / pre_wordcount * 1000000}")
-							#rint(f"POST FREQUENCY OF {k} is {post_lemmamap[k] / pre_wordcount * 1000000}")
 							pre_lemma_freqs_attempt.append(pre_lemmamap[k] * 1000000 / pre_wordcount)
 							post_lemma_freqs_attempt.append(post_lemmamap[k] * 1000000 / post_wordcount)
 
@@ -361,10 +346,7 @@ def perform_text_analysis():
 						p_value = p_value_new
 						pre_lemma_freqs = pre_lemma_freqs_attempt
 						post_lemma_freqs = post_lemma_freqs_attempt
-						best_threshold = filter_threshold
-					#print(f"ITERATIVE P VALUE: {p_value}")
 
-				#print(f"FINAL THRESHOLD: {best_threshold} | NUM WORDS: {len(pre_lemma_freqs)}")
 				kld = float("nan")
 				if len(pre_lemma_freqs) > 0 and p_value < 0.05:
 					presum = sum(pre_lemma_freqs)
@@ -372,8 +354,8 @@ def perform_text_analysis():
 					freq4 = [x/presum for x in pre_lemma_freqs]
 					freq4p = [x/postsum for x in post_lemma_freqs]
 					kld = sum([x * math.log(x, 2) for x in freq4p]) - sum(x * math.log(freq4[i], 2) for i, x in enumerate(freq4p))
-			#print(f"KLD FOR TOPIC: {topic} FOR DECADE: {decade} IS {kld}")
 			klds[topic][i] = kld
+
 	relative_entropy_output_filepath = os.path.join(ROOT_DIR, RELATIVE_ENTROPY_OUTPUT_FILENAME)
 	with open(relative_entropy_output_filepath, "w") as entropy_outfile:
 		entropy_writer = csv.writer(entropy_outfile)
@@ -411,7 +393,6 @@ def plot_entropies_from_file():
 			plt.savefig(os.path.join(ROOT_DIR, PLOT_BASE_FILENAME.format(topic)), bbox_inches='tight')
 			corr_lst.append((topic, linreg_result.rvalue))
 		corr_lst.sort(key=lambda t: abs(t[1]))
-		print(corr_lst)
 		plt.show()
 
 
