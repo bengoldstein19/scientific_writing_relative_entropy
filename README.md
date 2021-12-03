@@ -24,3 +24,4 @@ Setup:
 - Make sure the METADATA_FILENAME and TEXT_BASE_FILENAME parameters match the name of the downloaded files - If column titles change, set the column names of the ID_COL, ..., DECADE_COL
 - Tune parameters if desired, defaults are recommended values
 - Set output filenames to desired values
+- Run from the command line using either ./analysis.py (make sure you've given analysis.py executable permissions) or python analysis.py

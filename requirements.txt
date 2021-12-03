@@ -9,6 +9,7 @@ packaging==21.3
 Pillow==8.4.0
 pyparsing==3.0.6
 python-dateutil==2.8.2
+scipy==1.7.3
 setuptools-scm==6.3.2
 six==1.16.0
 soupsieve==2.3.1
