@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 import csv
 import os
 import matplotlib.pyplot as plt
-import json
 import scipy.stats as stats
 import math
 
@@ -16,7 +15,7 @@ TEXT_BASE_FILENAME = "Royal_Society_Corpus_open_v6.0_text_{}.tei.xml" #text ID i
 
 # MARK: OUTPUT FILENAMES
 TOPIC_DATA_OUTPUT_FILENAME = "topic_prevalence_data.csv"
-RELATIVE_ENTROPY_OUTPUT_FILENAME = "/Users/benjamingoldstein/Desktop/Desktop/School/Yale Pset PDFs/F2021/LING219/Final_Project/output data/relative_entropies_by_topic_vs_time.csv"
+RELATIVE_ENTROPY_OUTPUT_FILENAME = "./output_data/relative_entropies_by_topic_vs_time.csv"
 PLOT_BASE_FILENAME = "Entropy_vs_Time_{}"
 
 # MARK: COLUMN NAMES IN CORPUS
