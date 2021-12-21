@@ -16,7 +16,7 @@ TEXT_BASE_FILENAME = "Royal_Society_Corpus_open_v6.0_text_{}.tei.xml" #text ID i
 
 # MARK: OUTPUT FILENAMES
 TOPIC_DATA_OUTPUT_FILENAME = "topic_prevalence_data.csv"
-RELATIVE_ENTROPY_OUTPUT_FILENAME = "relative_entropies_by_topic_vs_time.csv"
+RELATIVE_ENTROPY_OUTPUT_FILENAME = "/Users/benjamingoldstein/Desktop/Desktop/School/Yale Pset PDFs/F2021/LING219/Final_Project/output data/relative_entropies_by_topic_vs_time.csv"
 PLOT_BASE_FILENAME = "Entropy_vs_Time_{}"
 
 # MARK: COLUMN NAMES IN CORPUS
@@ -394,6 +394,8 @@ def plot_entropies_from_file():
 		print(f"ERROR: NO file in {ROOT_DIR} named {RELATIVE_ENTROPY_OUTPUT_FILENAME}, make sure ROOT_DIR and RELATIVE_ENTROPY_OUTPUT_FILENAME are properly set, and make sure you've already run function (1) to produce the output")
 		return
 	
+	corr_lst = []
+
 	#plot and save each row of the output path as well as linear regression on the data
 	with open(output_filepath, "r") as entropy_file:
 		entropy_reader = csv.reader(entropy_file)
@@ -410,10 +412,13 @@ def plot_entropies_from_file():
 			plt.xlabel("Decade")
 			plt.ylabel("Relative Entropy")
 			linreg_result = stats.linregress([DECADES[x+2] for x in range(NUM_DECADES - 3) if data[x] == data[x]], [kld for kld in data if kld == kld])
+			corr_lst.append((topic, linreg_result.rvalue))
 			plt.plot([DECADES[x+2] for x in range(NUM_DECADES - 3) if data[x] == data[x]], [kld for kld in data if kld == kld], label='Data', linestyle='-', marker='o')
 			plt.plot([DECADES[x+2] for x in range(NUM_DECADES - 3) if data[x] == data[x]], [x*linreg_result.slope + linreg_result.intercept for x in [DECADES[x+2] for x in range(NUM_DECADES - 3) if data[x] == data[x]]], label=f"Linreg: y = {linreg_result.slope:.5f}x + {linreg_result.intercept:.3f} (r = {linreg_result.rvalue:.3f})", linestyle='-')
 			plt.legend()
 			plt.savefig(os.path.join(ROOT_DIR, PLOT_BASE_FILENAME.format(topic)), bbox_inches='tight')
+		corr_lst = sorted(corr_lst, key=lambda x: x[1])
+		print(corr_lst)
 		plt.show()
 
 
