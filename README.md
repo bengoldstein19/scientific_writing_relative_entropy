@@ -1,5 +1,7 @@
 # Scientific Writing: Relative Entropy Analysis
 
+Final paper is available for download in the "Goldstein Benjamin LING 219 Final Paper.docx" file (I previously submitted as a word doc to run turnitin but figured better to have everything in one place). All plots are in the plots folder, all output data csvs are in the output_data folder. The repo can be downloaded as a zip or files can be downloaded individually.
+
 Relative entropy analysis on the royal society corpus using python/scipy/matplotlib
 
 Dependencies:
